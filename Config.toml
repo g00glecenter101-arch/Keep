@@ -1,0 +1,14 @@
+
+driver_name = "K7RKScan"
+installation_path = 'C:\ProgramData'
+victim_processes = [
+    "msmpeng.exe",
+    "MpDefenderCoreService.exe",
+    "smartscreen.exe",
+    "securityhealthservice.exe",
+    "msascuil.exe",
+    "mpcmdrun.exe",
+    "searchindexer.exe",
+]
+continuous = true
+uninstall = false
